@@ -8,16 +8,42 @@ services:
           - ldap
         tty: true
         environment:
-            RUNDECK_JAAS_MODULES_0: JettyCombinedLdapLoginModule
-            RUNDECK_JAAS_LDAP_FLAG: sufficient
-            RUNDECK_JAAS_LDAP_PROVIDERURL: ldap://ldap:389
-            RUNDECK_JAAS_LDAP_BINDDN: cn=admin,dc=rdtest,dc=com
-            RUNDECK_JAAS_LDAP_BINDPASSWORD: AdminPass123
-            RUNDECK_JAAS_LDAP_USERBASEDN: ou=users,dc=rdtest,dc=com
-            RUNDECK_JAAS_LDAP_ROLEBASEDN: ou=roles,dc=rdtest,dc=com
+version: '3'
 
-            RUNDECK_JAAS_MODULES_1: PropertyFileLoginModule
-            RUNDECK_JAAS_FILE_FLAG: sufficient
+services:
+    rundeck1:
+        hostname: rundeck1
+        image: ${RUNDECK_IMAGE:-rundeck/rundeck:4.7.0-rc3-20221003}
+        tty: true
+        environment:
+        ### Active directory configurations
+        #AD ESPECIFICY CONFIGURATIONS
+          #ROLES
+          RUNDECK_JAAS_LDAP_ROLEBASEDN: OU=permissoes,OU=perfis,OU=test,DC=com
+          RUNDECK_JAAS_LDAP_ROLEMEMBERATTRIBUTE: "member"
+          RUNDECK_JAAS_LDAP_ROLEOBJECTCLASS: "group"
+          RUNDECK_JAAS_LDAP_ROLENAMEATTRIBUTE: "cn"
+          RUNDECK_JAAS_LDAP_SUPPLEMENTALROLES: "user,readonly"
+          #USERS
+          RUNDECK_JAAS_LDAP_USERBASEDN: OU=usuarios,OU=contas,OU=tesst,DC=com
+          RUNDECK_JAAS_LDAP_USERRDNATTRIBUTE: "sAMAccountName"
+          RUNDECK_JAAS_LDAP_USERIDATTRIBUTE: "sAMAccountName"
+          RUNDECK_JAAS_LDAP_USERPASSWORDATTRIBUTE: "unicodePwd"
+          #CONFIGS CONNECTION
+          RUNDECK_JAAS_LDAP_CACHEDURATIONMILLIS: "300000"
+          RUNDECK_JAAS_LDAP_REPORTSTATISTICS: "true"
+
+
+          RUNDECK_JAAS_MODULES_0: JettyCombinedLdapLoginModule
+          RUNDECK_JAAS_LDAP_PROVIDERURL: ldap://192.168.0.1:389
+          RUNDECK_JAAS_LDAP_BINDDN: s_rundeck,OU=servicos,OU=contas,OU=test,DC=com 
+          RUNDECK_JAAS_LDAP_BINDPASSWORD: "<STRONG_PASSWORD>"
+          RUNDECK_SECURITY_HTTPHEADERS_ENABLED: "0"
+          RUNDECK_JAAS_MODULES_1: PropertyFileLoginModule
+          RUNDECK_JAAS_FILE_FLAG: sufficient
+          RUNDECK_JAAS_LDAP_FLAG: sufficient
+        ports:
+          - 4440:4440
         volumes:
           - ${RUNDECK_LICENSE_FILE:-/dev/null}:/home/rundeck/etc/rundeckpro-license.key
         ports:
